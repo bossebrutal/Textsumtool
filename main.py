@@ -516,6 +516,26 @@ class TextSummarizerApp(App):
     def update_slider_label(self, instance, value):
         self.root.ids.slider_label.text = f"Summarized Sentences: {int(value)}"
 
+    def apply_formatting(self, format_type, tag=None):
+        # Get the current selection (emulated here)
+        text_input = self.root.ids.summary_output
+        selected_text = text_input.text
+
+        # Apply formatting
+        if format_type == 'bold':
+            formatted_text = f"**{selected_text}**"
+        elif format_type == 'italic':
+            formatted_text = f"*{selected_text}*"
+        elif format_type == 'color':
+            formatted_text = f"[{selected_text}]"  # Use a placeholder for color, since TextInput does not support direct color changes
+        elif format_type == 'size':
+            formatted_text = f"<{selected_text}>"  # Placeholder for size changes
+        else:
+            formatted_text = selected_text
+
+        # Set the updated text with formatting applied
+        text_input.text = formatted_text
+
 class CustomTooltip(Label):
     pass
 
