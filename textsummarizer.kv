@@ -1,0 +1,419 @@
+<ImageButton@ButtonBehavior+Image>:
+    size_hint: None, None
+    size: 60, 60  # Adjust size as needed
+    source: ''  # Image source will be specified in each instance
+    tooltip_text: ''
+    allow_stretch: True
+    keep_ratio: True
+    on_touch_down: self.handle_touch(self, args[1])
+    on_touch_move: self.handle_touch(self, args[1])
+    on_touch_up: self.hide_tooltip()
+
+<CustomSpinnerOption>:
+    height: 44
+
+<CustomSpinner>:
+    option_cls: 'CustomSpinnerOption'
+
+<CustomTooltip>:
+    size_hint: None, None
+    padding: 10, 5
+    font_size: '12sp' 
+    color: 1, 1, 1, 1 
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 0.3  # Black background with higher transparency
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10]  # Rounded corners with a radius of 10
+
+<SummarySelectionPopup@Popup>:
+    title: 'Load Summary'
+    size_hint: 0.8, 0.6
+    auto_dismiss: True
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+
+        RecycleView:
+            id: summary_list
+            viewclass: 'Button'
+            RecycleBoxLayout:
+                default_size: None, dp(56)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: 10
+            size_hint_y: None
+            Button:
+                text: 'Cancel'
+                size_hint_y: None
+                height: 50
+                on_press: root.dismiss()
+            Button:
+                id: delete_button
+                text: 'Delete'
+                size_hint_y: None
+                height: 50
+                on_press: root.delete_options()
+
+<SettingsPopup@Popup>:
+    title: 'Settings'
+    size_hint: 0.8, 0.8
+    auto_dismiss: False
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+        Label:
+            text: "Custom Stopwords (comma-separated):"
+
+        TextInput:
+            id: stopwords_input
+            multiline: False
+            size_hint_y: None
+            height: '30dp'
+            text: ', '.join(app.custom_stopwords)
+            on_text: root.on_stopwords_text(self, self.text)
+        
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '40dp'
+            spacing: 10
+
+            Label:
+                text: "Use Custom Stopwords:"
+
+            CheckBox:
+                id: stopwords_checkbox
+                active: app.summary_settings['use_stopwords']
+                on_active: root.on_use_stopwords_toggle(self, self.active)
+
+        Label:
+            id: length_label
+            text: f"Number of Sentences: {str(app.summary_settings['length'])}"
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: 10
+
+            Slider:
+                id: length_slider
+                min: 1
+                max: 15
+                value: app.summary_settings['length']
+                on_value: root.on_length_slider_value(self, self.value)
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: 0.5  # Reduce the width of the spinner box
+            pos_hint: {'center_x': 0.5}  # Center the spinners
+            size_hint_y: None
+            height: '70dp'
+            padding: 5
+
+            Label:
+                text: "Detail Level:"
+
+            Spinner:
+                id: detail_dropdown
+                text: app.summary_settings['detail']
+                values: ['Brief', 'Normal', 'Detailed']
+                size_hint_y: None
+                height: '40dp'  # Adjust the height of the Spinner to align with the BoxLayout
+                size_hint_x: 1 
+                on_text: root.on_detail_dropdown_select(self, self.text)
+
+        Label:
+            text: "Choose the level of detail. Brief gives a very short summary, normal provides a standard summary\nand detailed offers a more extensive summary."
+            font_size: '12sp'
+            align: 'middle'
+            color: (0.6, 0.6, 0.6, 1)
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: 0.5  # Reduce the width of the spinner box
+            pos_hint: {'center_x': 0.5}  # Center the spinners
+            size_hint_y: None
+            height: '70dp'
+            padding: 5
+
+            Label:
+                text: "Tone:"
+
+            Spinner:
+                id: tone_dropdown
+                text: app.summary_settings['tone']
+                values: ['Formal', 'Casual', 'Neutral']
+                size_hint_y: None
+                height: '40dp'  # Adjust the height of the Spinner to align with the BoxLayout
+                size_hint_x: 1 
+                on_text: root.on_tone_dropdown_select(self, self.text)
+
+        Label:
+            text: "Select the tone of the summary. Formal is more professional, casual is relaxed, and neutral is in-between."
+            font_size: '12sp'
+            color: (0.6, 0.6, 0.6, 1)
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '40dp'
+            spacing: 10
+
+            Button:
+                text: "Save"
+                on_press: root.on_save()
+
+            Button:
+                text: "Cancel"
+                on_press: root.dismiss()
+
+
+
+BoxLayout:
+    orientation: 'vertical'
+    padding: 5
+    spacing: 5
+    canvas.before:
+        Color:
+            rgba: 0.55, 0.55, 0.55, 1  # Dark gray background
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Spinner:
+        spacing: 0
+        id: spinner
+        text: 'Select a text'
+        size_hint: 0.3, 0.05
+        pos_hint: {'center_x': 0.5}
+        on_text: app.on_text_select(spinner.text)
+
+    TextInput:
+        id: text_input
+        text: 'Hej, jag heter Patrik och jag är 34 år gammal, hur gammal är du?'
+        multiline: True
+        size_hint: 1, None
+        height: 220
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 60
+        spacing: 10  # Add some spacing between elements if needed
+
+        # Left-aligned container
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_x: None
+            width: self.minimum_width
+
+            # Source language selection
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: None
+                width: 120  # Adjust width as necessary
+                TextInput:
+                    id: source_lang_search
+                    hint_text: 'Translate from...'
+                    multiline: False
+                    on_text: app.update_spinner('source_lang_spinner', self.text)
+                    size_hint: None, None
+                    size: 120, 30
+                CustomSpinner:
+                    id: source_lang_spinner
+                    text: 'Auto Detect'
+                    values: [lang for lang in app.language_map.keys()]
+                    size_hint: None, None
+                    size: 120, 30
+
+            # Target language selection
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: None
+                width: 120  # Adjust width as necessary
+                TextInput:
+                    id: target_lang_search
+                    hint_text: 'Translate to...'
+                    multiline: False
+                    on_text: app.update_spinner('target_lang_spinner', self.text)
+                    size_hint: None, None
+                    size: 120, 30
+                CustomSpinner:
+                    id: target_lang_spinner
+                    text: 'English (en)'
+                    values: [lang for lang in app.language_map.keys() if lang != 'Auto Detect']
+                    size_hint: None, None
+                    size: 120, 30
+
+    
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: None
+            width: 70  # Adjust width as necessary
+            spacing: 5
+            ImageButton:
+                source: 'pictures/translate.png'
+                tooltip_text: 'Translate'
+                size_hint: None, None
+                size: 40, 40
+                on_press: app.translate_text_button()
+                pos_hint: {'center_x': 0.5}
+            Label:
+                text: "Translate"
+                font_size: 14
+        
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: None
+            width: 70  # Adjust width as necessary
+            spacing: 5
+            ImageButton:
+                id: summarize_button
+                source: 'pictures/summary.png'
+                tooltip_text: 'Summarize'
+                size_hint: None, None
+                size: 40, 40
+                on_press: app.summarize_text()
+                pos_hint: {'center_x': 0.5}
+            Label:
+                text: "Summarize"
+                font_size: 14
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint: 1, None
+        height: 40
+        spacing: 15
+
+        ImageButton:
+            source: "pictures/summary.png"
+            tooltip_text: "Summary"
+            size_hint: None, None
+            size: 30, 30
+            on_press: app.show_summary()
+
+        ImageButton:
+            source: "pictures/bulletpoint.png"
+            tooltip_text: "Bullet Points"
+            size_hint: None, None
+            size: 30, 30
+            on_press: app.show_bullet_points()
+
+        ImageButton:
+            source: "pictures/best.png"
+            tooltip_text: "Best Line"
+            size_hint: None, None
+            size: 30, 30
+            on_press: app.show_best_line()
+        
+        Widget:
+            size_hint_x: 0.2
+
+        BoxLayout:
+            spacing: 15
+            size_hint: None, None
+            size: 120, 30
+
+            ImageButton:
+                source: "pictures/save.png"
+                tooltip_text: "Save Summary"
+                size_hint: None, None
+                size: 30, 30
+                on_press: app.open_save_popup()
+            
+            ImageButton:
+                source: "pictures/import.png"
+                tooltip_text: "Import Summary"
+                size_hint: None, None
+                size: 30, 30
+                on_press: app.open_summary_selection_popup()
+            
+            ImageButton:
+                source: "pictures/settings.png"
+                tooltip_text: "Settings"
+                size_hint: None, None
+                size: 30, 30
+                on_press: app.open_settings_popup()
+        
+
+    BoxLayout:
+        size_hint: (1, 0.4)
+        orientation: 'vertical'
+        Label:
+            id: summary_title
+            text: ''
+            size_hint_y: None
+            height: 30
+            halign: 'center'
+            valign: 'top'
+            bold: True
+            text_size: self.width, None
+        TextInput:
+            id: summary_output
+            text: 'Summary will appear here'
+            size_hint_y: None
+            height: 220
+            multiline: True
+            halign: 'left'  
+            text_size: self.width, None
+            cursor_blink: False  # Optional: Disable cursor blinking
+
+<SavePopup@Popup>:
+    title: 'Save Summary'
+    size_hint: 0.8, 0.4
+    auto_dismiss: False
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+
+        TextInput:
+            id: summary_name_input
+            hint_text: 'Enter summary name'
+            multiline: False
+
+        BoxLayout:
+            size_hint_y: None
+            height: '40dp'
+            spacing: 10
+
+            Button:
+                text: 'Save'
+                on_press: app.save_summary()
+
+            Button:
+                text: 'Cancel'
+                on_press: root.dismiss()
+
+<ConfirmationPopup@Popup>:
+    title: 'Overwrite Summary?'
+    size_hint: 0.8, 0.4
+    auto_dismiss: False
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+
+        Label:
+            text: 'A summary with this name already exists. Do you want to overwrite it?'
+
+        BoxLayout:
+            size_hint_y: None
+            height: '40dp'
+            spacing: 10
+
+            Button:
+                text: 'Yes'
+                on_press: app.confirm_overwrite()
+
+            Button:
+                text: 'Cancel'
+                on_press: root.dismiss()
